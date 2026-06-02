@@ -1,0 +1,10 @@
+src/
+tests/
+action/
+.github/
+*.config.ts
+*.config.js
+.eslintrc.js
+tsconfig.json
+jest.config.ts
+node_modules/

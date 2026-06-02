@@ -1,0 +1,58 @@
+{
+  "name": "qualm-a11y",
+  "version": "1.0.0",
+  "description": "Static AST-level quality analyser for LLM-generated React/TypeScript code. Operationalises findings from Sharma (2026).",
+  "bin": {
+    "qualm-a11y": "./dist/cli.js"
+  },
+  "main": "./dist/analyser.js",
+  "types": "./dist/types.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "RESEARCH.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "@typescript-eslint/parser": "^7.0.0",
+    "@typescript-eslint/typescript-estree": "^7.0.0",
+    "@typescript-eslint/utils": "^7.0.0",
+    "chalk": "^5.0.0",
+    "commander": "^12.0.0",
+    "glob": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "accessibility",
+    "static-analysis",
+    "react",
+    "typescript",
+    "llm",
+    "code-quality",
+    "ast"
+  ],
+  "license": "MIT",
+  "author": "Somil Sharma <iamsomilsharma@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SomilKSharma/qualm.git"
+  },
+  "homepage": "https://github.com/SomilKSharma/qualm#readme",
+  "bugs": {
+    "url": "https://github.com/SomilKSharma/qualm/issues"
+  }
+}

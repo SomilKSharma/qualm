@@ -1,0 +1,26 @@
+name: 'qualm — LLM Code Quality Regression Check'
+description: 'Static AST analysis for non-functional quality regressions in React/TypeScript. Based on Sharma (2026).'
+author: 'Somil Sharma'
+inputs:
+  github-token:
+    description: 'GitHub token for posting PR comments'
+    required: true
+    default: ${{ github.token }}
+  target-path:
+    description: 'Directory to analyse'
+    required: false
+    default: '.'
+  diff-branch:
+    description: 'Branch to diff against for regression detection'
+    required: false
+    default: 'main'
+  fail-on:
+    description: 'Severity level to fail on: error or warning'
+    required: false
+    default: 'error'
+runs:
+  using: 'node20'
+  main: 'dist/cli.js'
+branding:
+  icon: 'shield'
+  color: 'blue'

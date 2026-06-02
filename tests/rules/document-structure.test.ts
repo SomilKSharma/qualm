@@ -1,0 +1,90 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { analyseFile } from '../../src/analyser';
+
+const fixturesDir = join(__dirname, '../fixtures');
+
+function readFixture(name: string): string {
+  return readFileSync(join(fixturesDir, name), 'utf-8');
+}
+
+describe('document-structure rule', () => {
+  it('detects violations in violating fixture', () => {
+    const source = readFixture('document-structure-violating.tsx');
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations.length).toBeGreaterThanOrEqual(2);
+    expect(violations.every(v => v.category === 'document_structure')).toBe(true);
+    expect(violations.every(v => v.severity === 'error')).toBe(true);
+  });
+
+  it('reports no violations for compliant fixture', () => {
+    const source = readFixture('document-structure-compliant.tsx');
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations.length).toBe(0);
+  });
+
+  it('semantic score is lower for violating fixture', () => {
+    const violating = analyseFile(readFixture('document-structure-violating.tsx'), 'test.tsx');
+    const compliant = analyseFile(readFixture('document-structure-compliant.tsx'), 'test.tsx');
+    expect(violating.semanticScore).toBeLessThan(compliant.semanticScore);
+  });
+
+  it('compliant fixture has semantic score of 1.0', () => {
+    const result = analyseFile(readFixture('document-structure-compliant.tsx'), 'test.tsx');
+    expect(result.semanticScore).toBe(1.0);
+  });
+
+  it('violation message references Sharma 2026', () => {
+    const source = readFixture('document-structure-violating.tsx');
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations[0].message).toMatch(/Sharma \(2026\)/);
+  });
+
+  it('violation includes a fix suggestion', () => {
+    const source = readFixture('document-structure-violating.tsx');
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations[0].fixSuggestion).toBeTruthy();
+    expect(violations[0].fixSuggestion).toMatch(/button|role/i);
+  });
+
+  it('does not flag divs with role attribute', () => {
+    const source = `
+      import React from 'react';
+      export const C = () => <div onClick={() => {}} role="button">OK</div>;
+    `;
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations.length).toBe(0);
+  });
+
+  it('does not flag non-interactive divs', () => {
+    const source = `
+      import React from 'react';
+      export const C = () => <div className="wrapper">Plain div</div>;
+    `;
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations.length).toBe(0);
+  });
+
+  it('flags span with onClick', () => {
+    const source = `
+      import React from 'react';
+      export const C = () => <span onClick={() => {}}>Click</span>;
+    `;
+    const result = analyseFile(source, 'test.tsx');
+    const violations = result.violations.filter(v => v.ruleId === 'document-structure');
+    expect(violations.length).toBe(1);
+    expect(violations[0].message).toContain('<span>');
+  });
+
+  it('handles empty file gracefully', () => {
+    const result = analyseFile('', 'empty.tsx');
+    expect(result.violations).toEqual([]);
+    expect(result.semanticScore).toBe(1.0);
+  });
+});

@@ -1,6 +1,6 @@
-# qualm
+# qualm-a11y
 
-[![npm version](https://img.shields.io/npm/v/qualm.svg)](https://www.npmjs.com/package/qualm)
+[![npm version](https://img.shields.io/npm/v/qualm-a11y.svg)](https://www.npmjs.com/package/qualm-a11y)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20482307-blue)](https://doi.org/10.5281/zenodo.20482307)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/SomilKSharma/qualm/actions/workflows/qualm-ci.yml/badge.svg)](https://github.com/SomilKSharma/qualm/actions)
@@ -49,22 +49,22 @@ Options:
 
 ```bash
 # Analyse a single file
-qualm src/components/Button.tsx
+qualm-a11y src/components/Button.tsx
 
 # Analyse entire src directory, JSON output
-qualm src/ --format json --output results.json
+qualm-a11y src/ --format json --output results.json
 
 # SARIF output for GitHub Code Scanning
-qualm src/ --format sarif --output results.sarif
+qualm-a11y src/ --format sarif --output results.sarif
 
 # Detect regressions vs main branch
-qualm src/ --diff-branch main
+qualm-a11y src/ --diff-branch main
 
 # Fail CI on warnings too
-qualm src/ --fail-on warning
+qualm-a11y src/ --fail-on warning
 
 # Research mode — Sharma (2026) taxonomy table
-qualm src/ --research-mode
+qualm-a11y src/ --research-mode
 ```
 
 ---
@@ -107,7 +107,7 @@ qualm's semantic score is computed using these β values as weights — `documen
 ## `--research-mode` Output
 
 ```
-qualm Research Mode — Sharma (2026) Taxonomy
+qualm-a11y Research Mode — Sharma (2026) Taxonomy
 
 ────────────────────────────────────────────────────────────────────────────────
 Category                     | Violations   | β (paper)    | Weighted Score
@@ -143,14 +143,14 @@ jobs:
           fetch-depth: 0 # needed for --diff-branch
 
       - name: Run qualm
-        run: npx qualm src/ --diff-branch main --fail-on error
+        run: npx qualm-a11y src/ --diff-branch main --fail-on error
 ```
 
 For SARIF upload to GitHub Code Scanning:
 
 ```yaml
 - name: Run qualm (SARIF)
-  run: npx qualm src/ --format sarif --output qualm.sarif || true
+  run: npx qualm-a11y src/ --format sarif --output qualm.sarif || true
 
 - name: Upload SARIF
   uses: github/codeql-action/upload-sarif@v3

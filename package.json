@@ -1,6 +1,6 @@
 {
   "name": "qualm-a11y",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Static AST-level quality analyser for LLM-generated React/TypeScript code. Operationalises findings from Sharma (2026).",
   "bin": {
     "qualm-a11y": "./dist/cli.js"

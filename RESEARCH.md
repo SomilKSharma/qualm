@@ -89,7 +89,18 @@ qualm's `--diff-branch` command simulates the "before/after" component of this e
 - **deltaSemanticScore** = after.semanticScore − before.semanticScore (analogous to β)
 - **regressionDetected** = true when deltaSemanticScore < 0 OR new `document_structure`/`landmark_structure` violations appear
 
-This is a per-file approximation — not a panel estimate — but it provides the same directional signal: has this code change *introduced* accessibility debt?
+**This is a lint, not an estimator, and the difference is not cosmetic.** `--diff-branch`
+compares before against after with no control group. The follow-up study measured
+exactly what that costs: on synthetic panels with no treatment effect injected, a
+pooled before/after test rejects a true null **up to 100% of the time** once a
+common secular trend is present, while the same data analysed with a
+treated-versus-control contrast holds its nominal 5% error rate. A before/after
+delta cannot separate "this change caused it" from "everything was drifting anyway".
+
+So read the output as: *this diff introduces accessibility defects that are worth
+fixing*. Do not read it as an effect size, a β, or evidence that any particular
+tool or author caused a regression. It is a gate, and a useful one — the same way
+a type error is useful without being a causal claim.
 
 ---
 
@@ -144,9 +155,9 @@ Listeners are keyed by AST node type. Use `simpleTraverse` visitor keys:
 
 4. **Form label matching is file-scoped**: `<label htmlFor="x">` and `<input id="x">` must appear in the same file for the association to be detected. Split across files → false positive.
 
-5. **Single-rater construct validity**: The paper's AST score has Spearman ρ = 0.751 with expert ratings (Appendix D, N=53, single rater). qualm's semantic score inherits this validity ceiling and the single-rater limitation.
+5. **Construct validity — now multi-rater**: the underlying AST semantic score has since been validated against four independent React/TypeScript engineers on the same 53 stratified components: Krippendorff's α = 0.870 (95% CI [0.776, 0.923]), and α = 0.880 recomputed on the three raters who are not the metric's designer. Criterion agreement with the automated score is Spearman ρ = 0.670–0.751 per rater. The earlier single-rater caveat no longer applies; the remaining ceiling is that headless-UI and React Native components (~15% of that sample) abstract HTML semantics away and draw mid-scale ratings from both the metric and the raters.
 
-6. **β coefficients not replicated yet**: The paper's Table 5 estimates are from 74 repos across 2,374 repo-months. qualm uses these as calibration weights but they should be treated as priors pending independent replication.
+6. **Category effect sizes did not replicate**: the 74-repo Table 5 estimates were never significant, and the 446-repo follow-up returns a null on every WCAG category. They are no longer used as weights (see "What the follow-up study changed"). Treat any per-category ranking as unevidenced.
 
 ---
 

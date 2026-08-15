@@ -89,5 +89,5 @@ export function renderResearchMode(results: FileAnalysisResult[]): void {
     `${'Composite Regression Score'.padEnd(28)} | ${compositeScore.toFixed(4).padEnd(12)} | ${'Baseline'.padEnd(12)} | ${avgBaseline.toFixed(4)}`
   );
   console.log('─'.repeat(80));
-  console.log(chalk.dim('Paper baseline (Table A1): treated-pre AST score = 0.989, treated-post = 0.983'));
+  console.log(chalk.dim('Reference baseline (446-repo study, Table A1): treated-pre semantic score = 0.945, treated-post = 0.941'));
 }

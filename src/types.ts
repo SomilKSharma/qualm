@@ -97,11 +97,20 @@ export class QualmParserError extends Error {
 //   heading_hierarchy:    β = +0.003
 //   landmark_structure:   β = +0.004  (structural, close to document_structure)
 //   form_semantics:       β = +0.002  (similar to aria_correctness)
-export const PAPER_BETA_COEFFICIENTS: Record<ViolationCategory, number> = {
-  document_structure:   0.007,
-  landmark_structure:   0.004,
-  heading_hierarchy:    0.003,
-  interactive_semantics: 0.003,
-  aria_correctness:     0.002,
-  form_semantics:       0.002,
+export const CATEGORY_WEIGHTS: Record<ViolationCategory, number> = {
+  // Severity-based, NOT effect-size based. Earlier versions weighted these by
+  // per-category DiD coefficients from the 74-repo study, but none of those
+  // estimates was statistically significant (p = 0.15, 0.56, 0.82), three of the
+  // six weights were interpolated rather than measured, and the 446-repo
+  // follow-up returns a null on every WCAG category. There is therefore no
+  // empirical basis for ranking categories by estimated effect size.
+  //
+  // Weights now follow WCAG user impact, mirroring the severity-weighted axis
+  // of the follow-up study: error = 2, warning = 1.
+  document_structure:    2, // error   — interactive element unreachable by keyboard
+  interactive_semantics: 2, // error   — unlabelled image or control
+  aria_correctness:      2, // error   — malformed ARIA is worse than absent ARIA
+  form_semantics:        2, // error   — control with no accessible name
+  landmark_structure:    1, // warning — navigation is harder, not impossible
+  heading_hierarchy:     1, // warning — document outline degraded
 };

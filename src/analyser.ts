@@ -7,7 +7,7 @@ import {
   Violation,
   ViolationCategory,
   RuleContext,
-  PAPER_BETA_COEFFICIENTS
+  CATEGORY_WEIGHTS
 } from './types';
 
 export function analyseFile(sourceCode: string, filePath: string): FileAnalysisResult {
@@ -71,10 +71,10 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
   const metrics = calculateComplexityMetrics(ast, sourceCode);
 
   // Weighted semantic score using paper β coefficients from Table 5 (Sharma 2026).
-  // Each violation in a category deducts (β_i / Σβ) * 0.05 from the score.
+  // Each violation deducts (weight_i / Σweight) * 0.05 from the score.
   // The 0.05-per-violation constant is calibrated so that the treated-post mean
   // of ~0.983 (Table A1) is reachable with a small number of violations.
-  const totalBeta = Object.values(PAPER_BETA_COEFFICIENTS).reduce((a, b) => a + b, 0);
+  const totalWeight = Object.values(CATEGORY_WEIGHTS).reduce((a, b) => a + b, 0);
 
   const violationsByCategory = violations.reduce((acc, v) => {
     acc[v.category] = (acc[v.category] ?? 0) + 1;
@@ -83,8 +83,8 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
 
   let totalDeduction = 0;
   for (const [category, count] of Object.entries(violationsByCategory)) {
-    const beta = PAPER_BETA_COEFFICIENTS[category as ViolationCategory] ?? 0;
-    const weight = beta / totalBeta;
+    const weightRaw = CATEGORY_WEIGHTS[category as ViolationCategory] ?? 0;
+    const weight = weightRaw / totalWeight;
     totalDeduction += weight * (count as number) * 0.05;
   }
 

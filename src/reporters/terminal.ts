@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { FileAnalysisResult, DiffResult, PAPER_BETA_COEFFICIENTS, ViolationCategory } from '../types';
+import { FileAnalysisResult, DiffResult, CATEGORY_WEIGHTS, ViolationCategory } from '../types';
 
 export function renderTerminal(results: FileAnalysisResult[]): void {
   const totalViolations = results.reduce((a, r) => a + r.violations.length, 0);
@@ -58,26 +58,26 @@ export function renderDiffTerminal(diff: DiffResult): void {
 }
 
 export function renderResearchMode(results: FileAnalysisResult[]): void {
-  console.log(chalk.bold.cyan('\nqualm Research Mode — Sharma (2026) Taxonomy\n'));
+  console.log(chalk.bold.cyan('\nqualm Research Mode — WCAG category breakdown\n'));
   console.log('─'.repeat(80));
   console.log(
-    `${'Category'.padEnd(28)} | ${'Violations'.padEnd(12)} | ${'β (paper)'.padEnd(12)} | Weighted Score`
+    `${'Category'.padEnd(28)} | ${'Violations'.padEnd(12)} | ${'Severity'.padEnd(12)} | Weighted Score`
   );
   console.log('─'.repeat(80));
 
   const allViolations = results.flatMap(r => r.violations);
-  const totalBeta = Object.values(PAPER_BETA_COEFFICIENTS).reduce((a, b) => a + b, 0);
+  const totalWeight = Object.values(CATEGORY_WEIGHTS).reduce((a: number, b: number) => a + b, 0);
   let compositeScore = 0;
 
-  for (const [category, beta] of Object.entries(PAPER_BETA_COEFFICIENTS) as [ViolationCategory, number][]) {
+  for (const [category, w] of Object.entries(CATEGORY_WEIGHTS) as [ViolationCategory, number][]) {
     const count = allViolations.filter(v => v.category === category).length;
-    const weight = beta / totalBeta;
+    const weight = w / totalWeight;
     const weighted = weight * count * 0.05;
     compositeScore += weighted;
 
-    const betaStr = (beta >= 0 ? '+' : '') + beta.toFixed(3);
+    const sevStr = w >= 2 ? 'error' : 'warning';
     console.log(
-      `${category.padEnd(28)} | ${String(count).padEnd(12)} | ${betaStr.padEnd(12)} | ${weighted.toFixed(4)}`
+      `${category.padEnd(28)} | ${String(count).padEnd(12)} | ${sevStr.padEnd(12)} | ${weighted.toFixed(4)}`
     );
   }
 

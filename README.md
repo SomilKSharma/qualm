@@ -75,19 +75,17 @@ This tool directly implements the measurement framework from:
 
 **Sharma, S. (2026).** _Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study._ Zenodo preprint, [10.5281/zenodo.20482307](https://doi.org/10.5281/zenodo.20482307).
 
-**Study design**: Longitudinal difference-in-differences across 74 open-source React/TypeScript repositories (41 treated with AI tools, 33 matched controls), 2,374 repo-months.
+That 74-repository study has since been superseded by a six-times-larger one:
 
-**Key findings (Table 5 — DiD estimates by violation category):**
+**Sharma, S. (2026).** _No Detectable Accessibility Regression from AI Coding-Tool Adoption: A Bounded Null from 446 React/TypeScript Repositories under Staggered Difference-in-Differences._ Under review. Replication package: [10.5281/zenodo.20994931](https://doi.org/10.5281/zenodo.20994931).
 
-| Violation Category   | β (paper) | p-value | Interpretation                                   |
-| -------------------- | --------- | ------- | ------------------------------------------------ |
-| `document_structure` | +0.007    | 0.151   | Largest point estimate — dominant AI-gen failure |
-| `aria_specific`      | +0.002    | 0.561   | Moderate ARIA degradation                        |
-| `semantic_naming`    | −0.003    | 0.824   | AI may slightly improve naming visibility        |
+**What the larger study found**: across 446 repositories and 13,702 repo-months, AI-tool adoption shows **no detectable effect** on source-level accessibility on any measured axis. Equivalence testing excludes effects larger than ±5% of baseline on the dense semantic-HTML and keyboard axes. No WCAG category shows an effect.
 
-**AST semantic score (Table A1):** Treated repos show treated-pre mean = 0.989, treated-post mean = 0.983, consistent with marginal but accumulating structural degradation (DiD β = +0.005, p = 0.075).
+**What that means for qualm.** qualm is a *linter*, not a causal instrument, and the larger study is the reason the distinction matters:
 
-qualm's semantic score is computed using these β values as weights — `document_structure` violations deduct proportionally more than `aria_correctness` violations because the empirical evidence assigns them greater causal weight.
+- Violation categories are **not** weighted by estimated effect size. The earlier per-category coefficients were all statistically insignificant, and the larger study returns a null on every category. qualm weights by WCAG user impact instead (see `RESEARCH.md`).
+- A qualm finding says *this code has an accessibility defect worth fixing*. It does **not** say *an AI tool caused it*. On present evidence there is no measured adoption effect to attribute anything to.
+- The rules remain well-founded on their own terms: they detect real WCAG failures, independent of what caused them.
 
 ---
 

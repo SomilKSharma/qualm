@@ -1,8 +1,34 @@
 # RESEARCH.md — qualm Methodology
 
-qualm operationalises the empirical findings of:
+qualm implements the measurement approach of the study below. Read the section
+"What the follow-up study changed" before relying on any weighting in this
+document — the per-category effect sizes it originally leaned on did not hold up.
+
+
 
 > Sharma, S. (2026). *Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study.* Zenodo preprint, doi:10.5281/zenodo.20482307.
+
+### What the follow-up study changed
+
+A larger follow-up — *No Detectable Accessibility Regression from AI Coding-Tool
+Adoption*, 446 repositories and 13,702 repo-months, replication package
+[10.5281/zenodo.20994931](https://doi.org/10.5281/zenodo.20994931) — supersedes
+the 74-repo estimates below. It reports a comprehensive null: no measured
+accessibility axis shows an adoption effect, equivalence testing excludes effects
+larger than ±5% of baseline on the dense axes, and no WCAG category shows an
+effect. The category coefficients quoted in the mapping table were never
+significant (p = 0.15 to 0.82) and did not replicate.
+
+Two consequences for this tool:
+
+1. **Category weights are severity-based, not effect-size-based** (`CATEGORY_WEIGHTS`
+   in `src/types.ts`). Ranking categories by estimated causal magnitude is not
+   defensible on the current evidence.
+2. **qualm detects defects; it does not attribute them.** Every rule below flags a
+   genuine WCAG failure. None of them establishes that an AI tool introduced it.
+
+The table below is retained to document what the rules were originally derived
+from, not as live calibration.
 
 ---
 

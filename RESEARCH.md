@@ -53,7 +53,7 @@ The paper's `semantic_naming` category has β = −0.003 (Table 5), indicating t
 
 The paper reports AST-based semantic score as a key outcome variable (Section 3.6.2):
 
-- **Treated PRE mean**: 0.989 (SD 0.022) — Table A1
+- **Treated PRE mean**: 0.945 (SD 0.077) — 446-repo study, Table A1 (the 74-repo panel reported 0.989 on a different instrument)
 - **Treated POST mean**: 0.983 (SD 0.027) — Table A1
 - **DiD estimate**: β = +0.005, p = 0.075 (marginal significance)
 - **Tobit-corrected**: β = +0.005, p = 0.092
@@ -128,7 +128,7 @@ The three categories without a direct paper estimate (`landmark_structure`, `hea
 2. Export a single named constant: `export const yourRule: Rule = { ... }`
 3. Add it to `activeRules` array in `src/rules/index.ts`
 4. Choose an existing `ViolationCategory` or extend the type in `src/types.ts`
-5. Add corresponding β to `PAPER_BETA_COEFFICIENTS` in `src/types.ts`
+5. Add a severity weight to `CATEGORY_WEIGHTS` in `src/types.ts` (2 = error, 1 = warning)
 6. Write tests in `tests/rules/your-rule.test.ts`
 7. Add fixture files in `tests/fixtures/`
 

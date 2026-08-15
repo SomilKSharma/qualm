@@ -119,7 +119,7 @@ form_semantics               | 1            | +0.002       | 0.0095
 ────────────────────────────────────────────────────────────────────────────────
 Composite Regression Score   | 0.0928       | Baseline     | 0.9334
 ────────────────────────────────────────────────────────────────────────────────
-Paper baseline (Table A1): treated-pre AST score = 0.989, treated-post = 0.983
+Reference baseline (446-repo study, Table A1): treated-pre semantic score = 0.945, treated-post = 0.941
 ```
 
 ---
@@ -164,7 +164,7 @@ qualm is explicitly designed for researcher extension. Each rule in `src/rules/`
 
 1. `src/rules/your-rule.ts` — implement the `Rule` interface
 2. `src/rules/index.ts` — add to `activeRules`
-3. `src/types.ts` — add β coefficient to `PAPER_BETA_COEFFICIENTS`
+3. `src/types.ts` — add a severity weight to `CATEGORY_WEIGHTS` (2 = error, 1 = warning)
 
 See [RESEARCH.md](RESEARCH.md) for the full extension guide, β coefficient derivation, and known limitations.
 
@@ -181,12 +181,13 @@ Researchers extending this tool are encouraged to:
 If you use qualm in research, please cite the underlying empirical study:
 
 ```bibtex
-@article{sharma2026qualm,
+@misc{sharma2026a11y,
   title     = {Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study},
   author    = {Sharma, Somil},
   year      = {2026},
   month     = {May},
-  journal   = {arXiv preprint},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20482307},
   note      = {Independent Researcher, Gurugram, India},
   url       = {https://doi.org/10.5281/zenodo.20482307}
 }

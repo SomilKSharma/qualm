@@ -29,9 +29,9 @@ export function renderTerminal(results: FileAnalysisResult[]): void {
     }
   }
 
-  console.log(chalk.bold('\n📊 Summary — Sharma (2026) Taxonomy'));
+  console.log(chalk.bold('\n📊 Summary — WCAG category breakdown'));
   console.log('─'.repeat(60));
-  console.log(`Mean Semantic Score    : ${chalk.bold(avgScore.toFixed(4))} ${chalk.dim('(paper baseline: treated-pre=0.989, treated-post=0.983)')}`);
+  console.log(`Mean Semantic Score    : ${chalk.bold(avgScore.toFixed(4))} ${chalk.dim('(reference: 446-repo study treated-pre=0.945, treated-post=0.941)')}`);
 }
 
 export function renderDiffTerminal(diff: DiffResult): void {

@@ -73,7 +73,7 @@ qualm-a11y src/ --research-mode
 
 This tool directly implements the measurement framework from:
 
-**Sharma, S. (2026).** _Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study._ arXiv preprint.
+**Sharma, S. (2026).** _Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study._ Zenodo preprint, [10.5281/zenodo.20482307](https://doi.org/10.5281/zenodo.20482307).
 
 **Study design**: Longitudinal difference-in-differences across 74 open-source React/TypeScript repositories (41 treated with AI tools, 33 matched controls), 2,374 repo-months.
 

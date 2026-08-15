@@ -2,7 +2,7 @@
 
 qualm operationalises the empirical findings of:
 
-> Sharma, S. (2026). *Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study.* arXiv preprint.
+> Sharma, S. (2026). *Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study.* Zenodo preprint, doi:10.5281/zenodo.20482307.
 
 ---
 
@@ -127,12 +127,13 @@ Listeners are keyed by AST node type. Use `simpleTraverse` visitor keys:
 ## Citation
 
 ```bibtex
-@article{sharma2026qualm,
+@misc{sharma2026a11y,
   title     = {Accessibility and Semantic Quality Regressions in AI-Assisted React Development: An Empirical Study},
   author    = {Sharma, Somil},
   year      = {2026},
   month     = {May},
-  journal   = {arXiv preprint},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.20482307},
   note      = {Independent Researcher, Gurugram, India},
   url       = {https://doi.org/10.5281/zenodo.20482307}
 }

@@ -1,7 +1,7 @@
 {
   "name": "qualm-a11y",
-  "version": "1.0.2",
-  "description": "Static AST-level quality analyser for LLM-generated React/TypeScript code. Operationalises findings from Sharma (2026).",
+  "version": "1.1.0",
+  "description": "Static AST-level accessibility linter for React/TypeScript. Detects WCAG defects in source, including AI-generated code.",
   "bin": {
     "qualm-a11y": "./dist/cli.js"
   },

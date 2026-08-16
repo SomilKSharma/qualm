@@ -74,9 +74,9 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
   // (weight_i / Σweight) * DEDUCTION_PER_VIOLATION from a starting score of 1.0.
   //
   // IMPORTANT — this is an ORDINAL HEURISTIC for ranking files within a single
-  // qualm version. It is NOT the construct-validated AST semantic score of
-  // Sharma (2026) §3.6.1 and is not comparable to the values in that paper's
-  // Table A1. Two further caveats follow from the formula:
+  // qualm version. It is not a calibrated or validated measure of accessibility
+  // quality, and its values mean nothing outside this tool. Two further caveats
+  // follow from the formula:
   //   1. weights are normalised by Σweight, so adding or removing a rule shifts
   //      every score — values are not comparable across qualm versions;
   //   2. DEDUCTION_PER_VIOLATION is a presentation constant, not an estimate.

@@ -1,7 +1,7 @@
 {
   "name": "qualm-a11y",
-  "version": "1.1.0",
-  "description": "Render-independent static accessibility linter for React/TypeScript. Finds WCAG defects in component source with 100% coverage, and fails CI on regressions via --diff-branch.",
+  "version": "2.0.0",
+  "description": "Static accessibility linter for React/TypeScript that catches regressions in CI. Render-independent AST analysis: finds WCAG defects in component source with 100% coverage, and fails the build only on new defects via --diff-branch.",
   "bin": {
     "qualm-a11y": "./dist/cli.js"
   },
@@ -10,7 +10,7 @@
   "files": [
     "dist",
     "README.md",
-    "RESEARCH.md"
+    "METHODOLOGY.md"
   ],
   "engines": {
     "node": ">=18"
@@ -38,12 +38,16 @@
   },
   "keywords": [
     "accessibility",
+    "a11y",
+    "wcag",
     "static-analysis",
+    "linter",
     "react",
     "typescript",
-    "llm",
-    "code-quality",
-    "ast"
+    "ast",
+    "ci",
+    "sarif",
+    "code-quality"
   ],
   "license": "MIT",
   "author": "Somil Sharma <iamsomilsharma@gmail.com>",

@@ -84,16 +84,16 @@ export class QualmParserError extends Error {
 
 // Category weights are SEVERITY-based, not effect-size based.
 //
-// An earlier version weighted these by per-category DiD coefficients taken from
-// the originating 74-repo study. That is withdrawn: none of those per-category
-// estimates was statistically significant, three of the six weights were
-// interpolated rather than measured, and the 446-repo follow-up returns a null
-// on every WCAG category (Sharma 2026, Table 5 reports BH-adjusted q = 0.658 on
-// every axis). There is therefore no empirical basis for ranking categories by
-// estimated effect size, and qualm does not attempt to.
+// An earlier version weighted these by estimated per-category effect sizes.
+// That is withdrawn: none of those estimates was statistically distinguishable
+// from zero, half the weights were interpolated rather than measured, and a
+// larger follow-up measurement found no effect on any WCAG category. There is
+// no empirical basis for ranking categories by estimated impact magnitude, and
+// qualm does not attempt to.
 //
-// Weights now follow WCAG user impact, mirroring the severity-weighted axis of
-// that study: error = 2, warning = 1. See RESEARCH.md.
+// Weights now follow WCAG user impact: error = 2, warning = 1. A defect that
+// locks a user out outweighs one that makes navigation harder. See
+// METHODOLOGY.md.
 export const CATEGORY_WEIGHTS: Record<ViolationCategory, number> = {
   document_structure:    2, // error   — interactive element unreachable by keyboard
   interactive_semantics: 2, // error   — unlabelled image or control

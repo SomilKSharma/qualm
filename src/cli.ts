@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 import { glob } from 'glob';
 import { analyseFile } from './analyser';
 import { diffFiles } from './diff';
-import { renderTerminal, renderDiffTerminal, renderResearchMode } from './reporters/terminal';
+import { renderTerminal, renderDiffTerminal, renderReport } from './reporters/terminal';
 import { renderJSON, renderDiffJSON } from './reporters/json';
 import { renderSARIF } from './reporters/sarif';
 import { FileAnalysisResult } from './types';
@@ -19,8 +19,8 @@ const program = new Command();
 program
   .name('qualm')
   .description(
-    'Static AST-level quality analyser for LLM-generated React/TypeScript code.\n' +
-    'Render-independent accessibility linting; method follows Sharma (2026): https://doi.org/10.5281/zenodo.20994931'
+    'Static AST-level accessibility linter for React/TypeScript.\n' +
+    'Render-independent: finds WCAG defects in component source, with no DOM runtime.'
   )
   .version(pkg.version);
 
@@ -30,13 +30,13 @@ program
   .option('-o, --output <file>', 'Write output to file instead of stdout')
   .option('--diff-branch <branch>', 'Compare current files against git branch to detect regressions')
   .option('--fail-on <level>', 'Exit with code 1 if violations of this severity exist: error, warning', 'error')
-  .option('--research-mode', 'Output metrics in Sharma (2026) taxonomy format')
+  .option('--report', 'Print a WCAG category breakdown across all analysed files')
   .action(async (paths: string[], options: {
     format: string;
     output?: string;
     diffBranch?: string;
     failOn: string;
-    researchMode?: boolean;
+    report?: boolean;
   }) => {
     try {
       const files: string[] = [];
@@ -127,8 +127,8 @@ program
       if (!options.diffBranch && results.length > 0) {
         let output: string | null = null;
 
-        if (options.researchMode) {
-          renderResearchMode(results);
+        if (options.report) {
+          renderReport(results);
         } else if (options.format === 'json') {
           output = renderJSON(results);
         } else if (options.format === 'sarif') {

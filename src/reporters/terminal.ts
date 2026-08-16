@@ -31,7 +31,7 @@ export function renderTerminal(results: FileAnalysisResult[]): void {
 
   console.log(chalk.bold('\n📊 Summary — WCAG category breakdown'));
   console.log('─'.repeat(60));
-  console.log(`Mean Semantic Score    : ${chalk.bold(avgScore.toFixed(4))} ${chalk.dim('(reference: 446-repo study treated-pre=0.945, treated-post=0.941)')}`);
+  console.log(`Mean Semantic Score    : ${chalk.bold(avgScore.toFixed(4))} ${chalk.dim('(ordinal — for ranking files, not for comparing across qualm versions)')}`);
 }
 
 export function renderDiffTerminal(diff: DiffResult): void {
@@ -57,8 +57,8 @@ export function renderDiffTerminal(diff: DiffResult): void {
   }
 }
 
-export function renderResearchMode(results: FileAnalysisResult[]): void {
-  console.log(chalk.bold.cyan('\nqualm Research Mode — WCAG category breakdown\n'));
+export function renderReport(results: FileAnalysisResult[]): void {
+  console.log(chalk.bold.cyan('\nqualm — WCAG category breakdown\n'));
   console.log('─'.repeat(80));
   console.log(
     `${'Category'.padEnd(28)} | ${'Violations'.padEnd(12)} | ${'Severity'.padEnd(12)} | Weighted Score`
@@ -89,5 +89,5 @@ export function renderResearchMode(results: FileAnalysisResult[]): void {
     `${'Composite Regression Score'.padEnd(28)} | ${compositeScore.toFixed(4).padEnd(12)} | ${'Baseline'.padEnd(12)} | ${avgBaseline.toFixed(4)}`
   );
   console.log('─'.repeat(80));
-  console.log(chalk.dim('Reference baseline (446-repo study, Table A1): treated-pre semantic score = 0.945, treated-post = 0.941'));
+  console.log(chalk.dim('Weights are WCAG severity (error = 2, warning = 1), not estimated effect sizes. See METHODOLOGY.md.'));
 }

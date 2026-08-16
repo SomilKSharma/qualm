@@ -41,15 +41,11 @@ export function calculateComplexityMetrics(
 ): ComplexityMetrics {
   let cyclomaticComplexity = 1;
   let cognitiveComplexity = 0;
-  let nestingDepth = 0;
   let nodeCount = 0;
   let propsCount = 0;
 
-  // Track nesting via parent stack — simpleTraverse is enter-only, so we
-  // increment nesting when entering control flow nodes and use node.range
-  // to determine when we've "exited" them.
-  // Simpler: count nesting depth by tracking enter-only and resetting on
-  // function/component boundaries.
+  // simpleTraverse is enter-only, so nesting is tracked with an explicit stack
+  // of the control-flow nodes currently open around the node being visited.
   const nestingStack: string[] = [];
 
   simpleTraverse(ast, {

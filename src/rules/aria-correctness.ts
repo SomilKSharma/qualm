@@ -8,14 +8,23 @@ const BOOLEAN_ARIA_ATTRS = new Set([
   'aria-atomic', 'aria-grabbed'
 ]);
 
-const VALID_BOOLEAN_VALUES = new Set(['true', 'false']);
+// aria-checked and aria-pressed are tristate; aria-invalid carries a token set.
+// Restricting them to true/false would flag valid markup.
+const VALID_VALUES: Record<string, Set<string>> = {
+  'aria-checked': new Set(['true', 'false', 'mixed']),
+  'aria-pressed': new Set(['true', 'false', 'mixed']),
+  'aria-invalid': new Set(['true', 'false', 'grammar', 'spelling']),
+};
+
+const DEFAULT_BOOLEAN_VALUES = new Set(['true', 'false']);
 
 export const ariaCorrectnessRule: Rule = {
   id: 'aria-correctness',
   category: 'aria_correctness',
   severity: 'error',
   meta: {
-    description: 'Enforce valid ARIA attribute values per WAI-ARIA specification'
+    description: 'Enforce valid ARIA attribute values per WAI-ARIA specification',
+    docsUrl: 'https://www.w3.org/TR/wai-aria-1.2/#propcharacteristic_value'
   },
   create(context) {
     return {
@@ -26,31 +35,31 @@ export const ariaCorrectnessRule: Rule = {
 
         if (!BOOLEAN_ARIA_ATTRS.has(attrName)) return;
 
-        // Bare boolean attribute (e.g. aria-disabled with no value) is invalid —
-        // WAI-ARIA requires an explicit "true" or "false" string.
-        if (!node.value) {
-          context.report({
-            message: `${attrName} used as a bare boolean attribute. WAI-ARIA requires an explicit string value: "true" or "false".`,
-            fixSuggestion: `Change to ${attrName}="true" to make the intent explicit and ensure assistive technology reads it correctly.`,
-            location: context.getLoc(node),
-            snippet: context.getSourceCode(node)
-          });
+        // A bare JSX attribute (<span aria-hidden />) is shorthand for {true},
+        // which React serialises to aria-hidden="true". That is valid markup —
+        // it is not the same as a bare attribute in hand-written HTML.
+        if (!node.value) return;
+
+        // Only string literals are statically decidable. An expression
+        // (aria-expanded={isOpen}) may evaluate to anything at runtime, and
+        // guessing produces false positives.
+        if (
+          node.value.type !== 'Literal' ||
+          typeof node.value.value !== 'string'
+        ) {
           return;
         }
 
-        if (
-          node.value.type === 'Literal' &&
-          typeof node.value.value === 'string'
-        ) {
-          if (!VALID_BOOLEAN_VALUES.has(node.value.value)) {
-            context.report({
-              message: `Invalid value "${node.value.value}" for ${attrName}. Boolean ARIA attributes only accept "true" or "false".`,
-              fixSuggestion: `Change to ${attrName}="true" or ${attrName}="false", or use a dynamic expression like ${attrName}={isOpen ? "true" : "false"}.`,
-              location: context.getLoc(node),
-              snippet: context.getSourceCode(node)
-            });
-          }
-        }
+        const allowed = VALID_VALUES[attrName] ?? DEFAULT_BOOLEAN_VALUES;
+        if (allowed.has(node.value.value)) return;
+
+        const expected = [...allowed].map(v => `"${v}"`).join(', ');
+        context.report({
+          message: `Invalid value "${node.value.value}" for ${attrName}. Accepted values are ${expected}.`,
+          fixSuggestion: `Change to ${attrName}="true", or use an expression like ${attrName}={isOpen} when the value is dynamic.`,
+          location: context.getLoc(node),
+          snippet: context.getSourceCode(node)
+        });
       }
     };
   }

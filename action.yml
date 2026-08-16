@@ -1,26 +1,83 @@
 name: 'qualm — Accessibility Regression Check'
 description: 'Render-independent static accessibility linting for React/TypeScript. Fails a PR on newly introduced WCAG defects.'
 author: 'Somil Sharma'
+
+# A composite action running the published npm package.
+#
+# This was previously declared as `using: node20` with `main: dist/cli.js`.
+# A JavaScript action requires its compiled entrypoint to be committed, and
+# dist/ is gitignored — so the file the runner was told to execute never
+# existed. The CLI also reads argv, not the INPUT_* environment variables a
+# JavaScript action receives, so the inputs below were ignored even in theory.
+
 inputs:
-  github-token:
-    description: 'GitHub token for posting PR comments'
-    required: true
-    default: ${{ github.token }}
   target-path:
-    description: 'Directory to analyse'
+    description: 'File or directory to analyse'
     required: false
     default: '.'
   diff-branch:
-    description: 'Branch to diff against for regression detection'
+    description: 'Branch to diff against for regression detection. Leave empty to analyse the full tree.'
     required: false
-    default: 'main'
+    default: ''
   fail-on:
-    description: 'Severity level to fail on: error or warning'
+    description: 'Severity level that fails the build: error or warning'
     required: false
     default: 'error'
+  format:
+    description: 'Output format: terminal, json, or sarif'
+    required: false
+    default: 'terminal'
+  output:
+    description: 'Write output to this file instead of stdout'
+    required: false
+    default: ''
+  ignore:
+    description: 'Space-separated glob patterns to exclude'
+    required: false
+    default: ''
+  version:
+    description: 'Version of qualm-a11y to run'
+    required: false
+    default: 'latest'
+
 runs:
-  using: 'node20'
-  main: 'dist/cli.js'
+  using: 'composite'
+  steps:
+    - name: Run qualm
+      shell: bash
+      # Inputs are passed through the environment and quoted on use.
+      # Interpolating ${{ }} directly into the script would let a branch name
+      # or path execute arbitrary commands on the runner.
+      env:
+        QUALM_TARGET: ${{ inputs.target-path }}
+        QUALM_DIFF_BRANCH: ${{ inputs.diff-branch }}
+        QUALM_FAIL_ON: ${{ inputs.fail-on }}
+        QUALM_FORMAT: ${{ inputs.format }}
+        QUALM_OUTPUT: ${{ inputs.output }}
+        QUALM_IGNORE: ${{ inputs.ignore }}
+        QUALM_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+
+        args=( "$QUALM_TARGET" --fail-on "$QUALM_FAIL_ON" --format "$QUALM_FORMAT" )
+
+        if [ -n "$QUALM_DIFF_BRANCH" ]; then
+          args+=( --diff-branch "$QUALM_DIFF_BRANCH" )
+        fi
+
+        if [ -n "$QUALM_OUTPUT" ]; then
+          args+=( --output "$QUALM_OUTPUT" )
+        fi
+
+        if [ -n "$QUALM_IGNORE" ]; then
+          # Word splitting is intended here: the input is a list of globs.
+          # shellcheck disable=SC2206
+          patterns=( $QUALM_IGNORE )
+          args+=( --ignore "${patterns[@]}" )
+        fi
+
+        npx --yes "qualm-a11y@${QUALM_VERSION}" "${args[@]}"
+
 branding:
   icon: 'shield'
   color: 'blue'

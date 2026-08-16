@@ -12,5 +12,7 @@ module.exports = {
       statements: 80
     }
   },
-  collectCoverageFrom: ['src/**/*.ts', '!src/cli.ts']
+  // cli.ts was previously excluded from coverage. It is the file that shipped
+  // unable to start, so it is measured now like everything else.
+  collectCoverageFrom: ['src/**/*.ts']
 };

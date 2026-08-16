@@ -131,17 +131,35 @@ cause.**
    context-dependent ARIA relationships are not detectable.
 2. **No runtime DOM.** Colour contrast, live focus order, and dynamic `aria-hidden`
    state are out of scope, by construction.
-3. **Headless UI libraries.** Components built on Radix, Ariakit, or Chakra wrap
+3. **Silence on anything undecidable.** An element that forwards props
+   (`<input {...props} />`) may be labelled by its consumer; an expression value
+   (`aria-expanded={isOpen}`) is unknowable before it runs. Rules report nothing
+   in those cases, which under-reports on purpose. Precision is prioritised over
+   recall because the failure modes are not symmetric: a missed defect costs one
+   defect, while a false positive costs the tool its credibility and gets it
+   removed from CI entirely.
+4. **Headless UI libraries.** Components built on Radix, Ariakit, or Chakra wrap
    semantic elements qualm cannot follow through, and may score worse than their
    rendered output deserves. Roughly 15% of a hand-scored validation sample hit this
    ambiguity.
-4. **Form label matching is file-scoped.** `<label htmlFor="x">` and `<input id="x">`
+5. **Class-name heuristics match whole tokens only.** `landmark-structure` fires
+   on `className="sidebar"` but not on `text-sidebar-foreground`,
+   `@container/main`, or `[--header-height:0]`. Substring matching against
+   utility CSS produced a false positive every time it fired, measured across a
+   1,497-file codebase. The conservative rule misses `site-header`, and that is
+   the intended trade.
+6. **Form label matching is file-scoped.** `<label htmlFor="x">` and `<input id="x">`
    must live in the same file or you get a false positive.
-5. **`semanticScore` is unvalidated.** The score described above is qualm's own
+7. **`semanticScore` is unvalidated.** The score described above is qualm's own
    heuristic. It is not a validated instrument and should not be treated as one.
-6. **Per-category impact ranking is unevidenced.** Don't reintroduce effect-size
+8. **Per-category impact ranking is unevidenced.** Don't reintroduce effect-size
    weights without measurement to back them, and note that the measurement that
    exists found nothing to weight by.
+
+Where a rule is wrong anyway, `qualm-disable-next-line` and `qualm-disable-file`
+exist so a single false positive does not force a project to drop the tool. Their
+presence is not a licence to relax the constraint above: a rule that needs
+suppressing often is a rule that should be narrowed instead.
 
 ## Where this came from
 

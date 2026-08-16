@@ -1,25 +1,38 @@
 name: qualm CI
 
+# The default branch is master. This previously listed only `main`, so the
+# workflow never ran and the README badge reported no status.
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ['18', '20', '22']
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          # --diff-branch needs history to resolve the base ref.
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
@@ -30,5 +43,19 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Smoke test CLI
-        run: node dist/cli.js tests/fixtures/document-structure-violating.tsx || true
+      # The published package shipped four times unable to start, because
+      # nothing in the suite ever launched the binary. These steps fail the
+      # build rather than swallowing the error with `|| true`.
+      - name: CLI starts
+        run: node dist/cli.js --version
+
+      - name: CLI reports a known violation
+        run: |
+          set -euo pipefail
+          if node dist/cli.js tests/fixtures/document-structure-violating.tsx; then
+            echo "expected a non-zero exit for a violating fixture"
+            exit 1
+          fi
+
+      - name: CLI passes a clean fixture
+        run: node dist/cli.js tests/fixtures/document-structure-compliant.tsx

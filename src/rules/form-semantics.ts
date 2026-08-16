@@ -1,42 +1,38 @@
 import { TSESTree } from '@typescript-eslint/utils';
 import { Rule } from '../types';
+import {
+  getElementName,
+  getStringAttributeValue,
+  hasAttribute,
+  hasSpreadAttribute
+} from './utils';
 
 const FORM_CONTROLS = new Set(['input', 'select', 'textarea']);
 
-// Walk up the parent chain to detect implicit label wrapping.
-// simpleTraverse doesn't set parent pointers, so we track the JSXElement
-// ancestor stack ourselves via JSXElement enter/exit using a set of range starts.
-function isInsideLabelElement(node: TSESTree.JSXOpeningElement, labelRanges: Set<number>): boolean {
-  // We stored range[0] of every open <label> JSXElement that is currently open
-  // on the stack. If any open label's range contains this node's range, it's wrapped.
-  // Since simpleTraverse is single-pass enter-only in our analyser context, we
-  // instead record all label JSXElement ranges and check containment by range.
-  for (const labelStart of labelRanges) {
-    if (node.range && node.range[0] > labelStart) {
-      return true;
-    }
-  }
-  return false;
-}
+// Input types that carry their own accessible name, or none at all.
+// A submit button is named by its value; a hidden input is not exposed.
+const EXEMPT_INPUT_TYPES = new Set(['hidden', 'submit', 'reset', 'button']);
 
 export const formSemanticsRule: Rule = {
   id: 'form-semantics',
   category: 'form_semantics',
   severity: 'error',
   meta: {
-    description: 'Ensure form controls have associated label elements'
+    description: 'Ensure form controls have associated label elements',
+    docsUrl: 'https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html'
   },
   create(context) {
     const labelHtmlFors = new Set<string>();
     const inputsWithIds: { id: string; node: TSESTree.JSXOpeningElement }[] = [];
-    // Track range[0] of every <label> JSXElement opening tag seen in the file.
-    // Used to detect implicit label wrapping (input inside <label>...</label>).
+    // Ranges of every <label> element in the file, used to detect implicit
+    // labelling (<label><input /></label>). JSXElement fires before the
+    // descendant's JSXOpeningElement, so a wrapping label is always recorded
+    // before the control it wraps is examined.
     const labelElementRanges: { start: number; end: number }[] = [];
 
     return {
       JSXElement(node: TSESTree.JSXElement) {
-        const openingName = node.openingElement.name.type === 'JSXIdentifier'
-          ? node.openingElement.name.name : null;
+        const openingName = getElementName(node.openingElement);
         if (openingName === 'label' && node.range) {
           labelElementRanges.push({ start: node.range[0], end: node.range[1] });
         }
@@ -56,38 +52,36 @@ export const formSemanticsRule: Rule = {
       },
 
       JSXOpeningElement(node: TSESTree.JSXOpeningElement) {
-        const name =
-          node.name.type === 'JSXIdentifier' ? node.name.name : null;
+        const name = getElementName(node);
         if (!name || !FORM_CONTROLS.has(name)) return;
 
-        const hasAriaLabel = node.attributes.some(attr => {
-          if (attr.type !== 'JSXAttribute') return false;
-          const n = attr.name.type === 'JSXIdentifier' ? attr.name.name : null;
-          return n === 'aria-label' || n === 'aria-labelledby';
-        });
+        // Forwarded props may carry aria-label, id, or the label association
+        // itself. A design-system <Input {...props} /> cannot be judged here.
+        if (hasSpreadAttribute(node)) return;
 
-        if (hasAriaLabel) return;
+        if (hasAttribute(node, 'aria-label') || hasAttribute(node, 'aria-labelledby')) {
+          return;
+        }
 
-        // Implicit label: input is wrapped inside a <label> element
+        if (name === 'input') {
+          const type = getStringAttributeValue(node, 'type');
+          if (type && EXEMPT_INPUT_TYPES.has(type)) return;
+        }
+
+        // Implicit label: the control sits inside a <label> element.
         const isImplicitlyLabelled = node.range
-          ? labelElementRanges.some(l => node.range![0] > l.start && node.range![0] < l.end)
+          ? labelElementRanges.some(
+              l => node.range![0] > l.start && node.range![0] < l.end
+            )
           : false;
         if (isImplicitlyLabelled) return;
 
-        const idAttr = node.attributes.find(attr => {
-          if (attr.type !== 'JSXAttribute') return false;
-          return attr.name.type === 'JSXIdentifier' && attr.name.name === 'id';
-        }) as TSESTree.JSXAttribute | undefined;
-
-        const idValue =
-          idAttr?.value?.type === 'Literal' &&
-          typeof idAttr.value.value === 'string'
-            ? idAttr.value.value
-            : null;
+        const idValue = getStringAttributeValue(node, 'id');
 
         if (idValue) {
+          // Deferred: the matching <label htmlFor> may appear later in the file.
           inputsWithIds.push({ id: idValue, node });
-        } else {
+        } else if (!hasAttribute(node, 'id')) {
           context.report({
             message: `<${name}> has no associated label. Add a <label htmlFor="..."> or aria-label attribute.`,
             fixSuggestion: `Add an id to the <${name}> and a matching <label htmlFor="id"> element, or use aria-label="Description".`,
@@ -95,13 +89,13 @@ export const formSemanticsRule: Rule = {
             snippet: context.getSourceCode(node)
           });
         }
+        // A dynamic id ({id}) is left alone — the association cannot be checked.
       },
 
       'Program:exit'() {
         for (const { id, node } of inputsWithIds) {
           if (!labelHtmlFors.has(id)) {
-            const name =
-              node.name.type === 'JSXIdentifier' ? node.name.name : 'input';
+            const name = getElementName(node) ?? 'input';
             context.report({
               message: `<${name} id="${id}"> has no associated <label htmlFor="${id}">. Form controls must be programmatically associated with labels.`,
               fixSuggestion: `Add <label htmlFor="${id}">Label text</label> before or after the form control.`,

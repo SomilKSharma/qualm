@@ -1,9 +1,15 @@
 import { TSESTree } from '@typescript-eslint/utils';
 import { Rule } from '../types';
+import { getElementName, hasAttribute, hasSpreadAttribute } from './utils';
 
+// Pointer and keyboard handlers imply the element is operated by the user.
+//
+// onFocus and onBlur are deliberately absent: a div with onBlur is almost
+// always a container observing focus moving through its subtree, not a control.
+// Treating them as interaction was a large false-positive source.
 const INTERACTIVE_EVENT_HANDLERS = new Set([
   'onClick', 'onKeyDown', 'onKeyUp', 'onKeyPress',
-  'onFocus', 'onBlur', 'onMouseDown', 'onMouseUp'
+  'onMouseDown', 'onMouseUp'
 ]);
 
 export const documentStructureRule: Rule = {
@@ -17,15 +23,12 @@ export const documentStructureRule: Rule = {
   create(context) {
     return {
       JSXOpeningElement(node: TSESTree.JSXOpeningElement) {
-        const elementName =
-          node.name.type === 'JSXIdentifier' ? node.name.name : null;
+        const elementName = getElementName(node);
 
         if (!elementName) return;
         if (elementName !== 'div' && elementName !== 'span') return;
 
-        const attrs = node.attributes;
-
-        const hasInteractiveHandler = attrs.some(attr => {
+        const hasInteractiveHandler = node.attributes.some(attr => {
           if (attr.type !== 'JSXAttribute') return false;
           const name = attr.name.type === 'JSXIdentifier' ? attr.name.name : null;
           return name !== null && INTERACTIVE_EVENT_HANDLERS.has(name);
@@ -33,13 +36,11 @@ export const documentStructureRule: Rule = {
 
         if (!hasInteractiveHandler) return;
 
-        const hasRoleAttr = attrs.some(attr => {
-          if (attr.type !== 'JSXAttribute') return false;
-          const name = attr.name.type === 'JSXIdentifier' ? attr.name.name : null;
-          return name === 'role';
-        });
+        // An explicit role is the author declaring the semantics.
+        if (hasAttribute(node, 'role')) return;
 
-        if (hasRoleAttr) return;
+        // Forwarded props may carry the role, and this file cannot see them.
+        if (hasSpreadAttribute(node)) return;
 
         context.report({
           message: `Generic <${elementName}> element has an interactive event handler but no semantic element or explicit role. Assistive technology cannot tell that this is interactive.`,

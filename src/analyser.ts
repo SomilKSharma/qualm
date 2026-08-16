@@ -1,5 +1,6 @@
 import { simpleTraverse } from '@typescript-eslint/typescript-estree';
 import { parseTSX } from './parser';
+import { collectSuppressions, isSuppressed } from './suppressions';
 import { activeRules } from './rules/index';
 import { calculateComplexityMetrics } from './rules/complexity';
 import {
@@ -12,6 +13,8 @@ import {
 
 export function analyseFile(sourceCode: string, filePath: string): FileAnalysisResult {
   const ast = parseTSX(sourceCode, filePath);
+  const suppressions = collectSuppressions(ast.comments);
+  const rawViolations: Violation[] = [];
   const violations: Violation[] = [];
 
   const createContext = (
@@ -20,7 +23,7 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
     severity: Violation['severity']
   ): RuleContext => ({
     report(v) {
-      violations.push({ ...v, ruleId, category, severity });
+      rawViolations.push({ ...v, ruleId, category, severity });
     },
     getSourceCode(node: any) {
       if (node.range) {
@@ -66,6 +69,12 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
   // Fire Program:exit listeners
   for (const cb of exitCallbacks) {
     cb(ast);
+  }
+
+  // Apply qualm-disable directives once every rule has reported. Suppression
+  // happens here, not inside rules, so a directive covers all of them uniformly.
+  for (const v of rawViolations) {
+    if (!isSuppressed(v, suppressions)) violations.push(v);
   }
 
   const metrics = calculateComplexityMetrics(ast, sourceCode);

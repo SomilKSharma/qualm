@@ -58,10 +58,17 @@ Options:
   -o, --output <file>      Write output to file instead of stdout
   --diff-branch <branch>   Compare against a git branch to detect regressions
   --fail-on <level>        Exit 1 if violations of this level exist: error, warning  (default: "error")
+  --ignore <globs...>      Additional glob patterns to exclude
   --report                 Print a WCAG category breakdown across all analysed files
   -V, --version            Output version number
   -h, --help               Display help
 ```
+
+`node_modules`, `dist`, `build`, `out`, `coverage`, `.next`, `.turbo`,
+`storybook-static`, and `*.d.ts` are excluded by default.
+
+Exit codes: `0` clean, `1` violations found (or a regression, with
+`--diff-branch`), `2` a usage or environment error.
 
 ```bash
 # One file
@@ -78,6 +85,9 @@ qualm-a11y src/ --diff-branch main
 
 # Be stricter
 qualm-a11y src/ --fail-on warning
+
+# Exclude generated or vendored code
+qualm-a11y src/ --ignore '**/*.stories.tsx' '**/generated/**'
 
 # Category breakdown across the codebase
 qualm-a11y src/ --report
@@ -101,6 +111,41 @@ user outright (error); a degraded outline makes navigation harder but not imposs
 **qualm reports defects; it does not attribute them.** A finding says *this code has an
 accessibility defect worth fixing* — never who or what wrote it. There's a test
 enforcing that, and [METHODOLOGY.md](METHODOLOGY.md) explains why it's load-bearing.
+
+## Suppressing a finding
+
+Rules are deliberately conservative, but no static rule is right every time.
+
+```tsx
+{/* qualm-disable-next-line */}
+<div onClick={open}>Custom control</div>
+
+{/* qualm-disable-next-line landmark-structure */}
+<div className="sidebar">…</div>
+```
+
+```ts
+// qualm-disable-file
+// qualm-disable-file interactive-semantics
+```
+
+A bare directive silences every rule on that line; naming one or more rules
+(comma- or space-separated) silences only those. `qualm-disable-file` applies to
+the whole file.
+
+## False positives
+
+Rules stay quiet when a file cannot answer the question. An element that
+forwards props (`<input {...props} />`) may receive its label from the consumer,
+an expression value (`aria-expanded={isOpen}`) is unknowable statically, and a
+button's accessible name may come from anywhere in its subtree. In each case
+qualm says nothing rather than guessing.
+
+The cost is real: qualm misses defects a renderer would catch. That trade is
+deliberate — a linter that cries wolf on idiomatic React gets muted, and a muted
+linter catches nothing at all. Running the current rules across a 1,497-file
+production component library produces zero findings; the previous release
+produced 172, every one of them a false positive.
 
 ## `--report` output
 
@@ -139,10 +184,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # needed for --diff-branch
+          fetch-depth: 0 # needed for --diff-branch to resolve the base ref
 
-      - name: Run qualm
-        run: npx qualm-a11y src/ --diff-branch main --fail-on error
+      - uses: SomilKSharma/qualm@v2
+        with:
+          target-path: src/
+          diff-branch: ${{ github.event.pull_request.base.ref }}
+          fail-on: error
+```
+
+Or call the CLI directly, without the action:
+
+```yaml
+      - run: npx qualm-a11y src/ --diff-branch "$BASE_REF" --fail-on error
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
 ```
 
 With SARIF upload to Code Scanning:

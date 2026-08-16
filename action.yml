@@ -1,5 +1,5 @@
-name: 'qualm — LLM Code Quality Regression Check'
-description: 'Static AST analysis for non-functional quality regressions in React/TypeScript. Based on Sharma (2026).'
+name: 'qualm — Accessibility Regression Check'
+description: 'Render-independent static accessibility linting for React/TypeScript. Fails a PR on newly introduced WCAG defects.'
 author: 'Somil Sharma'
 inputs:
   github-token:

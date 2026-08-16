@@ -1,7 +1,7 @@
 {
   "name": "qualm-a11y",
   "version": "1.1.0",
-  "description": "Static AST-level accessibility linter for React/TypeScript. Detects WCAG defects in source, including AI-generated code.",
+  "description": "Render-independent static accessibility linter for React/TypeScript. Finds WCAG defects in component source with 100% coverage, and fails CI on regressions via --diff-branch.",
   "bin": {
     "qualm-a11y": "./dist/cli.js"
   },

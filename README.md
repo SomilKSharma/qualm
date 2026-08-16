@@ -1,16 +1,26 @@
 # qualm-a11y
 
 [![npm version](https://img.shields.io/npm/v/qualm-a11y.svg)](https://www.npmjs.com/package/qualm-a11y)
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20482307-blue)](https://doi.org/10.5281/zenodo.20482307)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20994931-blue)](https://doi.org/10.5281/zenodo.20994931)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/SomilKSharma/qualm/actions/workflows/qualm-ci.yml/badge.svg)](https://github.com/SomilKSharma/qualm/actions)
 
-**Static AST-level quality analyser for LLM-generated React/TypeScript code.** Operationalises the empirical findings of [Sharma (2026)](https://doi.org/10.5281/zenodo.20482307) as a working static analyser.
+**Static AST-level accessibility linter for React/TypeScript.** Detects WCAG defects that are visible in component *source* — semantic structure, keyboard affordances, ARIA usage — without rendering, so it covers 100% of components including those a headless browser cannot mount.
 
-> _AI coding tools do not produce an immediate, dramatic accessibility regression—but a slow accumulation effect, particularly in structural HTML semantics, warrants further investigation._
-> — Sharma (2026), Abstract
+qualm grew out of an empirical study of AI-assisted frontend development ([Sharma 2026](https://doi.org/10.5281/zenodo.20994931)), and uses the same render-independent AST approach. **It is a linter, not a causal instrument:** a qualm finding says *this code has an accessibility defect worth fixing*, never *an AI tool caused it*. See [Research background](#research-background) for why that distinction is load-bearing.
 
-qualm detects the violation patterns that the Sharma (2026) empirical study found most associated with AI-assisted code: generic containers substituted for semantic HTML, landmark elements rendered as divs, and structural HTML degradation that accumulates silently over months.
+## Why not eslint-plugin-jsx-a11y?
+
+Use both — they answer different questions. jsx-a11y has broader per-rule coverage and belongs in your editor. qualm adds four things it does not do:
+
+| | qualm | eslint-plugin-jsx-a11y |
+|---|---|---|
+| **Regression detection** | `--diff-branch main` scores the *delta* and fails CI only on new defects | no |
+| **SARIF output** | yes — GitHub Code Scanning, inline PR annotations | no |
+| **Complexity metrics** | cyclomatic, cognitive, JSX nesting depth, prop drilling | no |
+| **Per-file score** | ordinal severity-weighted score for ranking/triage | no |
+
+The practical split: jsx-a11y to stop new violations at the keystroke, qualm in CI to stop a *branch* from regressing and to give reviewers a ranked list.
 
 ---
 
@@ -69,7 +79,8 @@ qualm-a11y src/ --research-mode
 
 ---
 
-## Research Background
+## Research background
+<a name="research-background"></a>
 
 This tool directly implements the measurement framework from:
 
@@ -187,9 +198,9 @@ If you use qualm in research, please cite the underlying empirical study:
   year      = {2026},
   month     = {May},
   publisher = {Zenodo},
-  doi       = {10.5281/zenodo.20482307},
+  doi       = {10.5281/zenodo.20994931},
   note      = {Independent Researcher, Gurugram, India},
-  url       = {https://doi.org/10.5281/zenodo.20482307}
+  url       = {https://doi.org/10.5281/zenodo.20994931}
 }
 ```
 

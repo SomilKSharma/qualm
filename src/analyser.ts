@@ -70,10 +70,18 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
 
   const metrics = calculateComplexityMetrics(ast, sourceCode);
 
-  // Weighted semantic score using paper β coefficients from Table 5 (Sharma 2026).
-  // Each violation deducts (weight_i / Σweight) * 0.05 from the score.
-  // The 0.05-per-violation constant is calibrated so that the treated-post mean
-  // of ~0.983 (Table A1) is reachable with a small number of violations.
+  // Severity-weighted semantic score. Each violation deducts
+  // (weight_i / Σweight) * DEDUCTION_PER_VIOLATION from a starting score of 1.0.
+  //
+  // IMPORTANT — this is an ORDINAL HEURISTIC for ranking files within a single
+  // qualm version. It is NOT the construct-validated AST semantic score of
+  // Sharma (2026) §3.6.1 and is not comparable to the values in that paper's
+  // Table A1. Two further caveats follow from the formula:
+  //   1. weights are normalised by Σweight, so adding or removing a rule shifts
+  //      every score — values are not comparable across qualm versions;
+  //   2. DEDUCTION_PER_VIOLATION is a presentation constant, not an estimate.
+  // Use `violations` for decisions; use the score only for sorting.
+  const DEDUCTION_PER_VIOLATION = 0.05;
   const totalWeight = Object.values(CATEGORY_WEIGHTS).reduce((a, b) => a + b, 0);
 
   const violationsByCategory = violations.reduce((acc, v) => {
@@ -85,7 +93,7 @@ export function analyseFile(sourceCode: string, filePath: string): FileAnalysisR
   for (const [category, count] of Object.entries(violationsByCategory)) {
     const weightRaw = CATEGORY_WEIGHTS[category as ViolationCategory] ?? 0;
     const weight = weightRaw / totalWeight;
-    totalDeduction += weight * (count as number) * 0.05;
+    totalDeduction += weight * (count as number) * DEDUCTION_PER_VIOLATION;
   }
 
   const semanticScore = Math.max(0.0, Math.min(1.0, 1.0 - totalDeduction));

@@ -20,7 +20,7 @@ program
   .name('qualm')
   .description(
     'Static AST-level quality analyser for LLM-generated React/TypeScript code.\n' +
-    'Based on Sharma (2026) empirical study: https://doi.org/10.5281/zenodo.20482307'
+    'Render-independent accessibility linting; method follows Sharma (2026): https://doi.org/10.5281/zenodo.20994931'
   )
   .version(pkg.version);
 
@@ -62,11 +62,20 @@ program
       }
 
       const results: FileAnalysisResult[] = [];
+      const skipped: { file: string; reason: string }[] = [];
+      let anyRegression = false;
 
       for (const file of files) {
         if (!existsSync(file)) continue;
-        const source = readFileSync(file, 'utf-8');
+        let source: string;
+        try {
+          source = readFileSync(file, 'utf-8');
+        } catch (err: any) {
+          skipped.push({ file, reason: err.message });
+          continue;
+        }
 
+        try {
         if (options.diffBranch) {
           let beforeContent: string | null = null;
           try {
@@ -92,11 +101,27 @@ program
           }
 
           if (diff.regressionDetected) {
-            process.exit(1);
+            anyRegression = true;
           }
         } else {
           results.push(analyseFile(source, file));
         }
+        } catch (err: any) {
+          // A single unparseable file must not abort the run. qualm's premise is
+          // 100% coverage; crashing on one exotic file defeats it in CI.
+          skipped.push({ file, reason: err.message });
+        }
+      }
+
+      if (skipped.length > 0) {
+        console.error(
+          `qualm: skipped ${skipped.length} file(s) that could not be parsed:`
+        );
+        for (const s of skipped) console.error(`  ${s.file}: ${s.reason}`);
+      }
+
+      if (options.diffBranch) {
+        process.exit(anyRegression ? 1 : 0);
       }
 
       if (!options.diffBranch && results.length > 0) {

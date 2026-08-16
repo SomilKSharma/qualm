@@ -10,11 +10,11 @@ export function renderSARIF(results: FileAnalysisResult[]): string {
         driver: {
           name: 'qualm',
           version: '1.0.0',
-          informationUri: 'https://doi.org/10.5281/zenodo.20482307',
+          informationUri: 'https://github.com/SomilKSharma/qualm',
           rules: activeRules.map(r => ({
             id: r.id,
             shortDescription: { text: r.meta.description },
-            helpUri: r.meta.docsUrl ?? 'https://doi.org/10.5281/zenodo.20482307'
+            helpUri: r.meta.docsUrl ?? 'https://github.com/SomilKSharma/qualm#rules'
           }))
         }
       },

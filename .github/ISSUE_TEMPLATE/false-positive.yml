@@ -1,0 +1,47 @@
+name: False positive
+description: qualm reported a defect in code that is actually fine
+title: "[false positive] "
+labels: ["false positive"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful report the project can get. qualm's whole trade
+        is precision over recall — a rule that fires on idiomatic React is a
+        bug in the rule, not something for you to work around.
+
+  - type: input
+    id: rule
+    attributes:
+      label: Rule ID
+      description: The name in brackets in the output, e.g. landmark-structure
+      placeholder: landmark-structure
+    validations:
+      required: true
+
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Smallest snippet that reproduces it
+      render: tsx
+      placeholder: |
+        export const C = () => <div className="text-sidebar-foreground">x</div>;
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this code is correct
+      description: What makes the reported defect not a defect here?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: qualm version
+      description: Output of `npx qualm-a11y --version`
+      placeholder: 2.1.0
+    validations:
+      required: true

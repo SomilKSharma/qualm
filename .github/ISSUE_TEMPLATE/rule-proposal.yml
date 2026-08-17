@@ -1,0 +1,65 @@
+name: Rule proposal
+description: Suggest a new accessibility rule
+title: "[rule] "
+labels: ["rule proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rules must be decidable from a single file's AST with no DOM. Anything
+        needing computed styles, live focus order, or cross-file context is out
+        of scope by construction — see METHODOLOGY.md.
+
+  - type: textarea
+    id: defect
+    attributes:
+      label: The defect
+      description: What does this catch, and who does it exclude?
+    validations:
+      required: true
+
+  - type: textarea
+    id: violating
+    attributes:
+      label: Violating example
+      render: tsx
+    validations:
+      required: true
+
+  - type: textarea
+    id: compliant
+    attributes:
+      label: Compliant example
+      render: tsx
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Proposed severity
+      description: error excludes a user outright; warning makes things harder
+      options:
+        - error
+        - warning
+    validations:
+      required: true
+
+  - type: textarea
+    id: false-positives
+    attributes:
+      label: Where would this fire wrongly?
+      description: |
+        Required. Consider utility class names, forwarded props, dynamic
+        expressions, and content nested below direct children. A rule proposal
+        without this section cannot be evaluated.
+    validations:
+      required: true
+
+  - type: input
+    id: overlap
+    attributes:
+      label: Does eslint-plugin-jsx-a11y already cover this?
+      description: If so, say why qualm should too.
+    validations:
+      required: true

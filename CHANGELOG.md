@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] — 2026-08-17
+
+Found by running 2.1.0 across three more real codebases before proposing it to
+their maintainers.
+
+### Fixed
+
+- **`document-structure` flagged event plumbing.** `onClick={(e) =>
+  e.stopPropagation()}` stops a click reaching an ancestor; it affords the user
+  nothing, so demanding a role and a keyboard path for it is noise. A handler
+  that suppresses an event and then acts is still reported.
+- **`document-structure` flagged `contentEditable` elements.** These are
+  focusable and operable by construction, so the rule's premise does not hold.
+  An explicit `contentEditable={false}` remains in scope.
+
 ## [2.1.0] — 2026-08-17
 
 Audited against a 1,497-file production React codebase before recommending the

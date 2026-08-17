@@ -1,6 +1,6 @@
 import { TSESTree } from '@typescript-eslint/utils';
 import { Rule } from '../types';
-import { getElementName, hasAttribute, hasSpreadAttribute } from './utils';
+import { findAttribute, getElementName, hasAttribute, hasSpreadAttribute } from './utils';
 
 // Pointer and keyboard handlers imply the element is operated by the user.
 //
@@ -11,6 +11,68 @@ const INTERACTIVE_EVENT_HANDLERS = new Set([
   'onClick', 'onKeyDown', 'onKeyUp', 'onKeyPress',
   'onMouseDown', 'onMouseUp'
 ]);
+
+// Calls that suppress an event rather than respond to one.
+const INERT_EVENT_METHODS = new Set(['stopPropagation', 'preventDefault']);
+
+function isInertEventCall(node: TSESTree.Node): boolean {
+  return (
+    node.type === 'CallExpression' &&
+    node.callee.type === 'MemberExpression' &&
+    node.callee.property.type === 'Identifier' &&
+    INERT_EVENT_METHODS.has(node.callee.property.name)
+  );
+}
+
+/**
+ * True when a handler does nothing but stop an event travelling.
+ *
+ * `onClick={(e) => e.stopPropagation()}` is event plumbing — it stops a click
+ * reaching an ancestor. It affords the user nothing, so demanding a role and a
+ * keyboard path for it is noise. Real examples: modal inner panels and
+ * toolbars that guard against a backdrop's close handler.
+ */
+function isInertHandler(attr: TSESTree.JSXAttribute): boolean {
+  const value = attr.value;
+  if (!value || value.type !== 'JSXExpressionContainer') return false;
+
+  const fn = value.expression;
+  if (
+    fn.type !== 'ArrowFunctionExpression' &&
+    fn.type !== 'FunctionExpression'
+  ) {
+    return false;
+  }
+
+  // Concise arrow body: (e) => e.stopPropagation()
+  if (fn.body.type !== 'BlockStatement') return isInertEventCall(fn.body);
+
+  // Block body: every statement must be an inert call, and there must be one.
+  if (fn.body.body.length === 0) return false;
+  return fn.body.body.every(
+    stmt =>
+      stmt.type === 'ExpressionStatement' && isInertEventCall(stmt.expression)
+  );
+}
+
+/**
+ * contentEditable elements are focusable and operable by construction, so the
+ * premise of this rule — that the control cannot be reached — does not hold.
+ * An explicit `contentEditable={false}` is not editable and stays in scope.
+ */
+function isContentEditable(node: TSESTree.JSXOpeningElement): boolean {
+  const attr = findAttribute(node, 'contentEditable');
+  if (!attr) return false;
+  if (attr.value?.type === 'Literal' && attr.value.value === false) return false;
+  if (
+    attr.value?.type === 'JSXExpressionContainer' &&
+    attr.value.expression.type === 'Literal' &&
+    attr.value.expression.value === false
+  ) {
+    return false;
+  }
+  return true;
+}
 
 export const documentStructureRule: Rule = {
   id: 'document-structure',
@@ -28,13 +90,18 @@ export const documentStructureRule: Rule = {
         if (!elementName) return;
         if (elementName !== 'div' && elementName !== 'span') return;
 
+        // Only handlers that actually afford an interaction count. An element
+        // whose every handler merely suppresses an event is not a control.
         const hasInteractiveHandler = node.attributes.some(attr => {
           if (attr.type !== 'JSXAttribute') return false;
           const name = attr.name.type === 'JSXIdentifier' ? attr.name.name : null;
-          return name !== null && INTERACTIVE_EVENT_HANDLERS.has(name);
+          if (name === null || !INTERACTIVE_EVENT_HANDLERS.has(name)) return false;
+          return !isInertHandler(attr);
         });
 
         if (!hasInteractiveHandler) return;
+
+        if (isContentEditable(node)) return;
 
         // An explicit role is the author declaring the semantics.
         if (hasAttribute(node, 'role')) return;

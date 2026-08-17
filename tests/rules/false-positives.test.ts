@@ -158,6 +158,41 @@ describe('document-structure false positives', () => {
     expect(violationsFor(source, 'document-structure')).toHaveLength(0);
   });
 
+  it('ignores a handler that only stops propagation', () => {
+    // Modal inner panels guard against the backdrop's close handler. This
+    // affords the user nothing, so demanding a role for it is noise.
+    const source = `export const C = () => <div onClick={(e) => e.stopPropagation()}>x</div>;`;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(0);
+  });
+
+  it('ignores a block-bodied handler that only calls preventDefault', () => {
+    const source = `
+      export const C = () => (
+        <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>x</div>
+      );
+    `;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(0);
+  });
+
+  it('still flags a handler that stops propagation and then acts', () => {
+    const source = `
+      export const C = () => (
+        <div onClick={(e) => { e.stopPropagation(); open(); }}>x</div>
+      );
+    `;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(1);
+  });
+
+  it('ignores a contentEditable element, which is already focusable', () => {
+    const source = `export const C = () => <span contentEditable={isEditing} onClick={fn}>x</span>;`;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(0);
+  });
+
+  it('still flags contentEditable={false}, which is not editable', () => {
+    const source = `export const C = () => <span contentEditable={false} onClick={fn}>x</span>;`;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(1);
+  });
+
   it('still flags a click handler on a plain div', () => {
     const source = `export const C = () => <div onClick={fn}>Save</div>;`;
     expect(violationsFor(source, 'document-structure')).toHaveLength(1);

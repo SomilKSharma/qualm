@@ -55,6 +55,67 @@ function isInertHandler(attr: TSESTree.JSXAttribute): boolean {
   );
 }
 
+/** Walk every child node, without needing a visitor-key table. */
+function someDescendant(
+  node: unknown,
+  predicate: (n: TSESTree.Node) => boolean
+): boolean {
+  if (node === null || typeof node !== 'object') return false;
+
+  if (Array.isArray(node)) {
+    return node.some(child => someDescendant(child, predicate));
+  }
+
+  const candidate = node as TSESTree.Node;
+  if (typeof candidate.type === 'string' && predicate(candidate)) return true;
+
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'parent') continue;
+    if (value && typeof value === 'object' && someDescendant(value, predicate)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * True when the handler inspects `event.target`.
+ *
+ * Reading `target` means the code cares about which descendant was clicked —
+ * the element is a listening surface for events bubbling up from its subtree,
+ * not a control the user operates. Canvases, preview panes and menu bars all
+ * do this, and demanding a role and a keyboard path for the container is noise.
+ *
+ * `currentTarget` deliberately does not count: that refers to this element,
+ * which is exactly the interactive case.
+ */
+function isDelegationHandler(attr: TSESTree.JSXAttribute): boolean {
+  const value = attr.value;
+  if (!value || value.type !== 'JSXExpressionContainer') return false;
+
+  const fn = value.expression;
+  if (
+    fn.type !== 'ArrowFunctionExpression' &&
+    fn.type !== 'FunctionExpression'
+  ) {
+    return false;
+  }
+
+  const [firstParam] = fn.params;
+  if (!firstParam || firstParam.type !== 'Identifier') return false;
+  const eventName = firstParam.name;
+
+  return someDescendant(
+    fn.body,
+    n =>
+      n.type === 'MemberExpression' &&
+      n.object.type === 'Identifier' &&
+      n.object.name === eventName &&
+      n.property.type === 'Identifier' &&
+      n.property.name === 'target'
+  );
+}
+
 /**
  * contentEditable elements are focusable and operable by construction, so the
  * premise of this rule — that the control cannot be reached — does not hold.
@@ -96,7 +157,7 @@ export const documentStructureRule: Rule = {
           if (attr.type !== 'JSXAttribute') return false;
           const name = attr.name.type === 'JSXIdentifier' ? attr.name.name : null;
           if (name === null || !INTERACTIVE_EVENT_HANDLERS.has(name)) return false;
-          return !isInertHandler(attr);
+          return !isInertHandler(attr) && !isDelegationHandler(attr);
         });
 
         if (!hasInteractiveHandler) return;

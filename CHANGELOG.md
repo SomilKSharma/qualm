@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.2] — 2026-08-17
+
+Found while triaging every finding on puckeditor/puck by hand before proposing
+the tool to its maintainers.
+
+### Fixed
+
+- **`document-structure` flagged event delegation.** A handler that inspects
+  `event.target` cares about which descendant was clicked — the element is a
+  listening surface for events bubbling out of its subtree, not a control.
+  Canvases, preview panes and menu bars all do this. Handlers reading
+  `event.currentTarget`, which refers to the element itself, are still reported.
+
 ## [2.1.1] — 2026-08-17
 
 Found by running 2.1.0 across three more real codebases before proposing it to

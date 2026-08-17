@@ -1,6 +1,6 @@
 {
   "name": "qualm-a11y",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Static accessibility linter for React/TypeScript that catches regressions in CI. Render-independent AST analysis: finds WCAG defects in component source with 100% coverage, and fails the build only on new defects via --diff-branch.",
   "bin": {
     "qualm-a11y": "./dist/cli.js"

@@ -193,6 +193,29 @@ describe('document-structure false positives', () => {
     expect(violationsFor(source, 'document-structure')).toHaveLength(1);
   });
 
+  it('ignores an event-delegation handler that inspects event.target', () => {
+    // Canvases and preview panes listen for clicks bubbling out of their
+    // subtree. The container is a listening surface, not a control.
+    const source = `
+      export const C = () => (
+        <div onClick={(e) => {
+          const el = e.target as Element;
+          if (!el.hasAttribute("data-item")) clearSelection();
+        }}>x</div>
+      );
+    `;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(0);
+  });
+
+  it('still flags a handler that reads currentTarget, which is this element', () => {
+    const source = `
+      export const C = () => (
+        <div onClick={(e) => { activate(e.currentTarget); }}>x</div>
+      );
+    `;
+    expect(violationsFor(source, 'document-structure')).toHaveLength(1);
+  });
+
   it('still flags a click handler on a plain div', () => {
     const source = `export const C = () => <div onClick={fn}>Save</div>;`;
     expect(violationsFor(source, 'document-structure')).toHaveLength(1);
